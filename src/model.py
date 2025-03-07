@@ -5,10 +5,36 @@ The models represent the agent's policy and map states
 to actions.
 
 """
+import functools
 import torch
 import torch.nn as nn
 
-from src.utils import eval
+# 設定設備：如果有 CUDA 可用則使用 GPU，否則使用 CPU
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# 將 eval 裝飾器從 utils.py 移至此處
+def eval_decorator(function: callable) -> callable:
+    """Evaluation decorator for class methods.
+
+    Wraps function that calls a PyTorch module and ensures
+    that inference is performed in evaluation model. Returns
+    back to training mode after inference.
+
+    Args:
+        function: A callable.
+
+    Returns:
+        Decorated function.
+    """
+
+    @functools.wraps(function)
+    def eval_wrapper(self, *args, **kwargs):
+        self.eval()
+        out = function(self, *args, **kwargs)
+        self.train()
+        return out
+
+    return eval_wrapper
 
 
 class ResidualBlock(nn.Module):
@@ -60,8 +86,10 @@ class Model(nn.Module):
         ]
 
         self.model = nn.Sequential(*input_layer, *hidden_layers, *output_layer)
+        # 將模型移至指定設備
+        self.to(device)
 
-    @eval
+    @eval_decorator
     @torch.no_grad()
     def predict(self, state: torch.Tensor) -> int:
         """Predicts action for given state.
@@ -72,10 +100,14 @@ class Model(nn.Module):
         Returns:
             The action represented by an integer.
         """
+        # 確保輸入張量在正確的設備上
+        state = state.to(device)
         prediction = self(state)
         action = torch.argmax(prediction, dim=-1).item()
         return action
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # 確保輸入張量在正確的設備上
+        x = x.to(device)
         x = self.model(x)
         return x

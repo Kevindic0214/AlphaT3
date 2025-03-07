@@ -33,6 +33,10 @@ class Agent:
         Returns:
             Normalized rewards.
         """
+        # 確保獎勵張量在正確的設備上
+        if torch.cuda.is_available():
+            rewards = rewards.cuda()
+        
         if len(rewards) > 1:
             std = torch.std(rewards)
             if std != 0:

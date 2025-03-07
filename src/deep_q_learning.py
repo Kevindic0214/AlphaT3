@@ -92,13 +92,20 @@ class DeepQLearning(Agent):
 
         # Normalize the rewards of sampled batch.
         rewards = torch.tensor([memory[2] for memory in replay_batch])
+        if torch.cuda.is_available():
+            rewards = rewards.cuda()
         rewards = self._normalize_rewards(rewards=rewards)
         for memory, reward in zip(replay_batch, rewards):
-            memory[2] = reward
+            memory[2] = reward.item()  # 將 GPU 張量轉換為 Python 數值
 
         # Get states from replay buffer.
         states = torch.vstack([memory[0] for memory in replay_batch])
         new_states = torch.vstack([memory[3] for memory in replay_batch])
+        
+        # 移至 GPU（如果可用）
+        if torch.cuda.is_available():
+            states = states.cuda()
+            new_states = new_states.cuda()
 
         self.model.eval()
         q_targets = self.model(states)
@@ -120,6 +127,11 @@ class DeepQLearning(Agent):
             states: Tensor holding states.
             q_targets: Tensor holding q-targets.
         """
+        # 確保張量在正確的設備上
+        if torch.cuda.is_available():
+            states = states.cuda()
+            q_targets = q_targets.cuda()
+        
         self.optimizer.zero_grad()
         output_actions = self.model(states)
         loss = self.criterion(output_actions, q_targets)
@@ -134,8 +146,16 @@ class DeepQLearning(Agent):
         Args:
             events: Tuple holding events.
         """
+        # 確保事件中的張量在正確的設備上
+        events_gpu = {
+            "states": [state.cuda() if torch.cuda.is_available() else state for state in events["states"]],
+            "actions": events["actions"],
+            "rewards": events["rewards"],
+            "new_states": [state.cuda() if torch.cuda.is_available() else state for state in events["new_states"]],
+            "dones": events["dones"]
+        }
 
-        self._memorize(events=events)
+        self._memorize(events=events_gpu)
         states, q_targets = self._create_training_set()
         loss = self.train_on_batch(states=states, q_targets=q_targets)
         self._epsilon_scheduler()

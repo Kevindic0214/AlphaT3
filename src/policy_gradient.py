@@ -47,6 +47,10 @@ class PolicyGradient(Agent):
         Returns:
             Sampled action represented by an integer.
         """
+        # 確保狀態張量在正確的設備上
+        if torch.cuda.is_available():
+            state = state.cuda()
+        
         self.model.eval()
         # Build the probability density function (PDF) for the given state.
         action_prob = self.model(state)
@@ -70,11 +74,22 @@ class PolicyGradient(Agent):
             discounted_rewards.append(reward_sum)
         discounted_rewards = discounted_rewards[::-1]
 
+        # 將獎勵張量移至正確的設備
         discounted_rewards = torch.tensor(discounted_rewards)
+        if torch.cuda.is_available():
+            discounted_rewards = discounted_rewards.cuda()
         discounted_rewards = self._normalize_rewards(rewards=discounted_rewards)
 
+        # 將狀態張量移至正確的設備
+        if torch.cuda.is_available():
+            states = [state.cuda() for state in states]
         states = torch.vstack(states)
-        target_actions = F.one_hot(torch.tensor(actions), num_classes=self.size**2).float()
+        
+        # 將動作張量移至正確的設備
+        actions_tensor = torch.tensor(actions)
+        if torch.cuda.is_available():
+            actions_tensor = actions_tensor.cuda()
+        target_actions = F.one_hot(actions_tensor, num_classes=self.size**2).float()
 
         # https://discuss.pytorch.org/t/per-class-and-per-sample-weighting/25530/3
         self.optimizer.zero_grad()
@@ -85,5 +100,5 @@ class PolicyGradient(Agent):
         loss.backward()
         self.optimizer.step()
 
-        self.stats["loss"] = loss
+        self.stats["loss"] = loss.item()  # 使用 .item() 將 GPU 張量轉換為 Python 數值
         self.stats["reward"] = sum(rewards)

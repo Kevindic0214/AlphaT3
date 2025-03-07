@@ -80,7 +80,10 @@ class TicTacToe(Environment):
         """Initializes a square Tic-tac-toe field."""
         super().__init__()
         self.size = size
+        # 將遊戲場地張量移至正確的設備
         self.field = torch.zeros(size=(size, size), dtype=torch.long)
+        if torch.cuda.is_available():
+            self.field = self.field.cuda()
 
     @torch.no_grad()
     def _has_won(self, player: int) -> bool:
@@ -211,6 +214,7 @@ class TicTacToe(Environment):
             reward = -1.0
             is_finished = True
 
+        # 確保狀態張量在正確的設備上
         state = self.field.float()[None, ...]
         done = is_finished
 
