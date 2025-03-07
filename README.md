@@ -1,4 +1,4 @@
-# TicTacToe 
+# AlphaT3: Reinforcement Learning for Tic-Tac-Toe
 
 $$
 \begin{aligned}
@@ -12,6 +12,8 @@ $$
 \end{aligned}
 $$
 
+**AlphaT3** is a fork of [TicTacToe](https://github.com/kaifishr/TicTacToe), originally developed by [kaifishr](https://github.com/kaifishr). This project aims to **expand upon the original work by completing the remaining TODOs and enhancing the existing reinforcement learning algorithms**.
+
 A minimal environment equipped with reinforcement learning algorithms to train agents to compete in [tic-tac-toe](https://en.wikipedia.org/wiki/Tic-tac-toe). Due to its simplicity, this repository is potentially useful for educational purposes and can serve as a starting point to solve other games, such as the generalization of tic-tac-toe (m,n,k-games), chess, or Go.
 
 
@@ -20,7 +22,7 @@ A minimal environment equipped with reinforcement learning algorithms to train a
 To run *TicTacToe*, install the latest master directly from GitHub. For a basic install, run:
 
 ```console
-git clone https://github.com/kaifishr/TicTacToe
+git clone https://github.com/Kevindic0214/AlphaT3.git
 cd TicTacToe 
 pip3 install -r requirements.txt
 ```
