@@ -40,14 +40,12 @@ python train.py -a "deep_q_learning"
 Track important metrics during training with Tensorboard:
 
 ```console
-cd TicTacToe 
 tensorboard --logdir runs/
 ```
 
 After training, play tic-tac-toe against an agent:
 
 ```console
-cd TicTacToe 
 python play.py -a deep_q_learning -mn agent_a 
 ```
 
